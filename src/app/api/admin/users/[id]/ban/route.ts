@@ -7,7 +7,7 @@ export const POST = handler(async (req, { params }) => {
   const admin = await requireAuth(req, ["ADMIN"]);
   const userId = params.id;
 
-  if (userId === admin.id) {
+  if (userId === admin.sub) {
     return fail("Cannot ban yourself", 400);
   }
 
@@ -39,7 +39,7 @@ export const POST = handler(async (req, { params }) => {
     resourceType: "USER",
     resourceId: userId,
     description: `Admin ${admin.email} banned user ${user.email}`,
-    performedBy: admin.id,
+    performedBy: admin.sub,
     ipAddress: ip,
     userAgent,
   });

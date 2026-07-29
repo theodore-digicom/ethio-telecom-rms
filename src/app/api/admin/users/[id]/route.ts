@@ -1,11 +1,7 @@
 import { handler, requireAuth, ok, fail, parseBody } from "@/lib/http";
-import { hashPassword, signToken, newRefreshToken } from "@/lib/auth";
-import { hashRefreshToken, issueTokens } from "@/lib/session";
-import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { logAudit, getClientInfo } from "@/lib/audit";
 import { z } from "zod";
-import { randomBytes } from "crypto";
 
 const UpdateUserSchema = z.object({
   name: z.string().min(1).optional(),
@@ -81,22 +77,26 @@ export const PATCH = handler(async (req, { params }) => {
   });
 
   const { ip, userAgent } = getClientInfo(req);
-  const changes = Object.keys(body).reduce(
-    (acc, key) => {
-      if (body[key] !== user[key]) {
-        acc[key] = { from: user[key], to: body[key] };
-      }
-      return acc;
-    },
-    {} as Record<string, any>
-  );
+  const changes: Record<string, any> = {};
+  if (body.name !== undefined && body.name !== user.name) {
+    changes.name = { from: user.name, to: body.name };
+  }
+  if (body.email !== undefined && body.email !== user.email) {
+    changes.email = { from: user.email, to: body.email };
+  }
+  if (body.phone !== undefined && body.phone !== user.phone) {
+    changes.phone = { from: user.phone, to: body.phone };
+  }
+  if (body.role !== undefined && body.role !== user.role) {
+    changes.role = { from: user.role, to: body.role };
+  }
 
   await logAudit({
     action: "USER_UPDATED",
     resourceType: "USER",
     resourceId: userId,
     description: `Admin ${admin.email} updated user ${user.email}`,
-    performedBy: admin.id,
+    performedBy: admin.sub,
     changes,
     ipAddress: ip,
     userAgent,
@@ -110,7 +110,7 @@ export const DELETE = handler(async (req, { params }) => {
   const admin = await requireAuth(req, ["ADMIN"]);
   const userId = params.id;
 
-  if (userId === admin.id) {
+  if (userId === admin.sub) {
     return fail("Cannot delete yourself", 400);
   }
 
@@ -128,7 +128,7 @@ export const DELETE = handler(async (req, { params }) => {
     resourceType: "USER",
     resourceId: userId,
     description: `Admin ${admin.email} deleted user ${user.email}`,
-    performedBy: admin.id,
+    performedBy: admin.sub,
     ipAddress: ip,
     userAgent,
   });

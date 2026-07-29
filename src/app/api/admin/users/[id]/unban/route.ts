@@ -27,7 +27,7 @@ export const POST = handler(async (req, { params }) => {
     resourceType: "USER",
     resourceId: userId,
     description: `Admin ${admin.email} unbanned user ${user.email}`,
-    performedBy: admin.id,
+    performedBy: admin.sub,
     ipAddress: ip,
     userAgent,
   });
