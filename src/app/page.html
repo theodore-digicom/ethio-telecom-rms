@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethio Telecom RMS - API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        nav {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        nav a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        h3 {
+            color: #764ba2;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .endpoint {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-right: 10px;
+        }
+        .get { background: #61affe; color: white; }
+        .post { background: #49cc90; color: white; }
+        .patch { background: #fca130; color: white; }
+        .delete { background: #f93e3e; color: white; }
+        .auth {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .security {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+        tr:hover {
+            background: #f9f9f9;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🏥 Ethio Telecom RMS</h1>
+        <p>Report Management System - Complete API Documentation</p>
+    </header>
+
+    <div class="container">
+        <nav>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#auth">Authentication</a></li>
+                <li><a href="#queue">Queue System</a></li>
+                <li><a href="#endpoints">Endpoints</a></li>
+                <li><a href="#setup">Setup</a></li>
+                <li><a href="#examples">Examples</a></li>
+            </ul>
+        </nav>
+
+        <section id="overview">
+            <h2>📋 Overview</h2>
+            <p>Ethio Telecom RMS is a complete REST API for managing customer support tickets with real-time queue tracking, technician assignment, and appointment scheduling.</p>
+
+            <h3>Key Features</h3>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li><strong>Ticket Management</strong> - Customers report internet issues and get digital tickets</li>
+                <li><strong>Live Queue Tracking</strong> - Real-time position, wait time, and queue ordering</li>
+                <li><strong>Technician Assignment</strong> - Admins assign and manage technician workload</li>
+                <li><strong>Appointments</strong> - Reserve support slots at branch offices</li>
+                <li><strong>Service Reviews</strong> - Rate and review completed tickets</li>
+                <li><strong>Notifications</strong> - Real-time updates on ticket status changes</li>
+            </ul>
+
+            <h3>Architecture</h3>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li><strong>Backend:</strong> Next.js 15 (App Router)</li>
+                <li><strong>Database:</strong> Neon Postgres (prod) / SQLite (dev)</li>
+                <li><strong>ORM:</strong> Prisma</li>
+                <li><strong>Auth:</strong> JWT (15m access + 30d rotating refresh)</li>
+                <li><strong>Email:</strong> Resend (password reset)</li>
+                <li><strong>Deployment:</strong> Vercel</li>
+            </ul>
+        </section>
+
+        <section id="auth">
+            <h2>🔐 Authentication</h2>
+
+            <div class="auth">
+                <strong>Access Token (15 minutes)</strong><br>
+                JWT sent in <code>Authorization: Bearer &lt;token&gt;</code> header. Short-lived for security.
+            </div>
+
+            <div class="auth">
+                <strong>Refresh Token (30 days)</strong><br>
+                Opaque token stored in DB. Rotated on every use (old token revoked). Single-use for added security.
+            </div>
+
+            <h3>Auth Flow</h3>
+            <pre>1. Register → get accessToken + refreshToken
+2. Use accessToken for API requests (valid 15 min)
+3. When accessToken expires:
+   POST /api/auth/refresh with refreshToken
+   → get new accessToken + new refreshToken (old revoked)
+4. Logout: POST /api/auth/logout with refreshToken
+   → token revoked, user must login again</pre>
+
+            <div class="security">
+                <strong>Security Features:</strong><br>
+                • Password: bcrypt (10 rounds)<br>
+                • Refresh tokens: SHA256 hashed, never returned after init<br>
+                • Token rotation: old token invalid after refresh<br>
+                • Session revocation: logout, password change, all revoke all sessions<br>
+                • No leaks: passwords/hashes never in responses
+            </div>
+        </section>
+
+        <section id="queue">
+            <h2>📊 Queue System</h2>
+
+            <h3>Queue Ordering</h3>
+            <pre>Tickets ordered by:
+1. Priority: URGENT > HIGH > MEDIUM > LOW
+2. Within priority: FIFO (First-In-First-Out)
+3. Status: OPEN, ASSIGNED, IN_PROGRESS (all counted)
+         RESOLVED, CLOSED, CANCELLED (not in queue)</pre>
+
+            <h3>Queue Position</h3>
+            <table>
+                <tr>
+                    <th>Field</th>
+                    <th>Meaning</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td><code>position</code></td>
+                    <td>Your place in line (1-based)</td>
+                    <td>5</td>
+                </tr>
+                <tr>
+                    <td><code>ahead</code></td>
+                    <td>How many customers before you</td>
+                    <td>4</td>
+                </tr>
+                <tr>
+                    <td><code>estimatedWaitMinutes</code></td>
+                    <td>Estimated wait time</td>
+                    <td>180 (3 hours)</td>
+                </tr>
+            </table>
+
+            <h3>ETA Calculation</h3>
+            <pre>estimatedWaitMinutes = ahead × AVG_HANDLE_MINUTES
+where AVG_HANDLE_MINUTES = 45 (configurable)</pre>
+
+            <p style="margin-top: 15px;"><strong>Example:</strong> If you're position 5 with 4 ahead, and each ticket takes ~45 min, your ETA is ~180 minutes (3 hours).</p>
+        </section>
+
+        <section id="endpoints">
+            <h2>🔌 API Endpoints</h2>
+
+            <h3>Authentication (10 endpoints)</h3>
+            <div class="endpoint">
+                <span class="method post">POST</span> <code>/api/auth/register</code>
+                <p style="margin-top: 8px;">Register new customer account, returns access + refresh tokens</p>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span> <code>/api/auth/login</code>
+                <p style="margin-top: 8px;">Login with email/password, returns tokens</p>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span> <code>/api/auth/refresh</code>
+                <p style="margin-top: 8px;">Exchange refresh token for new token pair (rotates)</p>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span> <code>/api/auth/logout</code>
+                <p style="margin-top: 8px;">Revoke refresh token(s), supports logout everywhere</p>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span> <code>/api/auth/forgot-password</code>
+                <p style="margin-top: 8px;">Request password reset, emails token via Resend</p>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span> <code>/api/auth/reset-password</code>
+                <p style="margin-top: 8px;">Reset password with token, single-use</p>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span> <code>/api/auth/change-password</code>
+                <p style="margin-top: 8px;">Change password while logged in</p>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span> <code>/api/auth/me</code>
+                <p style="margin-top: 8px;">Get current user profile</p>
+            </div>
+            <div class="endpoint">
+                <span class="method patch">PATCH</span> <code>/api/auth/me</code>
+                <p style="margin-top: 8px;">Update profile (name/phone/email)</p>
+            </div>
+            <div class="endpoint">
+                <span class="method delete">DELETE</span> <code>/api/auth/me</code>
+                <p style="margin-top: 8px;">Delete account (blocked if tickets exist)</p>
+            </div>
+
+            <h3>Tickets (9 endpoints)</h3>
+            <div class="endpoint">
+                <span class="method post">POST</span> <code>/api/tickets</code>
+                <p style="margin-top: 8px;">Report problem, get digital ticket</p>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span> <code>/api/tickets</code>
+                <p style="margin-top: 8px;">List tickets (scoped by role: customer=own, tech=assigned, admin=all)</p>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span> <code>/api/tickets/:id</code>
+                <p style="margin-top: 8px;">Ticket detail + live queue info</p>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span> <code>/api/tickets/:id/queue</code>
+                <p style="margin-top: 8px;">Queue position, people ahead, ETA</p>
+            </div>
+            <div class="endpoint">
+                <span class="method patch">PATCH</span> <code>/api/tickets/:id</code>
+                <p style="margin-top: 8px;">Customer cancels or staff update status/priority</p>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span> <code>/api/tickets/:id/assign</code>
+                <p style="margin-top: 8px;">Admin assigns technician (admin only)</p>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span> <code>/api/tickets/:id/resolve</code>
+                <p style="margin-top: 8px;">Tech/admin mark ticket fixed</p>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span> <code>/api/tickets/:id/review</code>
+                <p style="margin-top: 8px;">Customer rate service (closes ticket)</p>
+            </div>
+
+            <h3>Appointments (3 endpoints)</h3>
+            <div class="endpoint">
+                <span class="method post">POST</span> <code>/api/appointments</code>
+                <p style="margin-top: 8px;">Reserve branch support slot</p>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span> <code>/api/appointments</code>
+                <p style="margin-top: 8px;">List appointments (role-scoped)</p>
+            </div>
+            <div class="endpoint">
+                <span class="method patch">PATCH</span> <code>/api/appointments/:id</code>
+                <p style="margin-top: 8px;">Cancel (customer) or complete (staff)</p>
+            </div>
+
+            <h3>Admin & Other (4 endpoints)</h3>
+            <div class="endpoint">
+                <span class="method get">GET</span> <code>/api/technicians</code>
+                <p style="margin-top: 8px;">List technicians + active workload (admin only)</p>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span> <code>/api/admin/queue</code>
+                <p style="margin-top: 8px;">Full ordered queue for assignment (admin only)</p>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span> <code>/api/notifications</code>
+                <p style="margin-top: 8px;">User notifications (supports ?unread=1)</p>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span> <code>/api/health</code>
+                <p style="margin-top: 8px;">Health check</p>
+            </div>
+
+            <p style="margin-top: 20px;"><strong>Total: 30 endpoints</strong></p>
+        </section>
+
+        <section id="setup">
+            <h2>⚙️ Setup & Deployment</h2>
+
+            <h3>Local Development</h3>
+            <pre>npm install
+npm run db:push      # sync SQLite schema
+npm run db:seed      # create test users (admin/tech/customer)
+npm run dev          # http://localhost:3055
+npm test             # run Playwright tests</pre>
+
+            <h3>Environment Variables</h3>
+            <pre>DATABASE_URL="file:./test.db"  (dev) or postgresql://...  (prod)
+JWT_SECRET="your-64-char-random-secret"
+EMAIL_FROM="noreply@theo.et"
+APP_URL="https://your-domain.com"
+RESEND_API_KEY="re_..."
+REFRESH_TTL_DAYS=30
+AVG_HANDLE_MINUTES=45</pre>
+
+            <h3>Deployment to Vercel</h3>
+            <pre>1. Link project: vercel link
+2. Set environment: vercel env add
+3. Deploy: vercel deploy --prod
+4. Seed database (from Vercel CLI):
+   npm run db:push  # sync schema
+   npm run db:seed  # create test users</pre>
+
+            <h3>Test Users (Seeded)</h3>
+            <table>
+                <tr>
+                    <th>Role</th>
+                    <th>Email</th>
+                    <th>Password</th>
+                </tr>
+                <tr>
+                    <td>Admin</td>
+                    <td>admin@ethiotelecom.et</td>
+                    <td>password123</td>
+                </tr>
+                <tr>
+                    <td>Technician</td>
+                    <td>tech@ethiotelecom.et</td>
+                    <td>password123</td>
+                </tr>
+                <tr>
+                    <td>Customer</td>
+                    <td>customer@example.com</td>
+                    <td>password123</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="examples">
+            <h2>💡 Usage Examples</h2>
+
+            <h3>Register & Login</h3>
+            <pre>curl -X POST https://api.example.com/api/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "secure123",
+    "phone": "+251911000000"
+  }'
+
+# Response:
+{
+  "data": {
+    "accessToken": "eyJ...",
+    "refreshToken": "opaque-token",
+    "user": {
+      "id": "user-id",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "role": "CUSTOMER"
+    }
+  }
+}</pre>
+
+            <h3>Report a Problem</h3>
+            <pre>curl -X POST https://api.example.com/api/tickets \
+  -H 'Authorization: Bearer eyJ...' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "subject": "No internet since morning",
+    "serviceNumber": "0911-ETC-8842",
+    "category": "NO_CONNECTION",
+    "description": "Line dead, no connectivity",
+    "priority": "HIGH"
+  }'
+
+# Response:
+{
+  "data": {
+    "id": "ticket-id",
+    "ticketNumber": "ETC-20260729-4821",
+    "subject": "No internet since morning",
+    "status": "OPEN",
+    "createdAt": "2026-07-29T10:30:00.000Z"
+  }
+}</pre>
+
+            <h3>Check Queue Position</h3>
+            <pre>curl -X GET https://api.example.com/api/tickets/ticket-id/queue \
+  -H 'Authorization: Bearer eyJ...'
+
+# Response:
+{
+  "data": {
+    "position": 5,
+    "ahead": 4,
+    "estimatedWaitMinutes": 180,
+    "status": "OPEN"
+  }
+}</pre>
+
+            <h3>Refresh Token</h3>
+            <pre>curl -X POST https://api.example.com/api/auth/refresh \
+  -H 'Content-Type: application/json' \
+  -d '{"refreshToken": "opaque-token"}'
+
+# Response:
+{
+  "data": {
+    "accessToken": "new-jwt-token",
+    "refreshToken": "new-opaque-token"
+  }
+}</pre>
+        </section>
+
+        <footer>
+            <p>Ethio Telecom Report Management System</p>
+            <p>Built with Next.js, Prisma, Neon Postgres, Resend</p>
+            <p><a href="https://github.com/theodore-digicom/ethio-telecom-rms" style="color: #667eea;">GitHub Repository</a></p>
+        </footer>
+    </div>
+</body>
+</html>
