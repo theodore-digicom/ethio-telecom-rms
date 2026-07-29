@@ -2,6 +2,10 @@ import { test, expect } from "@playwright/test";
 
 const BASE = "https://ethio-telecom-rms.vercel.app";
 
+function uniqueEmail(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@test.example`;
+}
+
 async function loginAs(request: any, email: string) {
   const res = await request.post(`${BASE}/api/auth/login`, {
     data: { email, password: "password123" },
@@ -15,7 +19,7 @@ async function loginAs(request: any, email: string) {
 
 test.describe("Security", () => {
   test("admin routes blocked for non-admin", async ({ request }) => {
-    const email = "sec-nonadmin@test.example";
+    const email = uniqueEmail("sec-nonadmin");
     const reg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Non Admin", email, password: "password123" },
     });
@@ -29,7 +33,7 @@ test.describe("Security", () => {
 
   test("admin queue shows all tickets", async ({ request }) => {
     const adminToken = await loginAs(request, "admin@ethiotelecom.et");
-    const custEmail = "sec-queueall@test.example";
+    const custEmail = uniqueEmail("sec-queueall");
     const custReg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Queue All", email: custEmail, password: "password123" },
     });
@@ -41,7 +45,7 @@ test.describe("Security", () => {
       data: {
         subject: "Test ticket",
         category: "NO_CONNECTION",
-        description: "Test",
+        description: "Test issue description",
       },
     });
 
@@ -56,7 +60,7 @@ test.describe("Security", () => {
 
   test("technician cannot list customer tickets", async ({ request }) => {
     const techToken = await loginAs(request, "tech@ethiotelecom.et");
-    const custEmail = "sec-techlist@test.example";
+    const custEmail = uniqueEmail("sec-techlist");
     const custReg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Tech List", email: custEmail, password: "password123" },
     });
@@ -82,7 +86,7 @@ test.describe("Security", () => {
   });
 
   test("refresh token single-use", async ({ request }) => {
-    const email = "sec-singleuse@test.example";
+    const email = uniqueEmail("sec-singleuse");
     const reg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Single Use", email, password: "password123" },
     });
@@ -111,8 +115,8 @@ test.describe("Security", () => {
   test("ownership blocks access to another customer's ticket", async ({
     request,
   }) => {
-    const email1 = "sec-own1@test.example";
-    const email2 = "sec-own2@test.example";
+    const email1 = uniqueEmail("sec-own1");
+    const email2 = uniqueEmail("sec-own2");
 
     const reg1 = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Owner1", email: email1, password: "password123" },
@@ -151,7 +155,7 @@ test.describe("Security", () => {
 
   test("customer cannot reassign own ticket", async ({ request }) => {
     const adminToken = await loginAs(request, "admin@ethiotelecom.et");
-    const custEmail = "sec-noreassign@test.example";
+    const custEmail = uniqueEmail("sec-noreassign");
     const custReg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "No Reassign", email: custEmail, password: "password123" },
     });
@@ -162,7 +166,7 @@ test.describe("Security", () => {
       data: {
         subject: "My ticket",
         category: "ROUTER",
-        description: "Test",
+        description: "Test issue description",
       },
     });
     const { data: ticket } = await create.json();
@@ -183,7 +187,7 @@ test.describe("Security", () => {
 
   test("technician cannot resolve unassigned ticket", async ({ request }) => {
     const techToken = await loginAs(request, "tech@ethiotelecom.et");
-    const custEmail = "sec-noresolve@test.example";
+    const custEmail = uniqueEmail("sec-noresolve");
     const custReg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "No Resolve", email: custEmail, password: "password123" },
     });
@@ -213,7 +217,7 @@ test.describe("Security", () => {
     const register = await request.post(`${BASE}/api/auth/register`, {
       data: {
         name: "Role Test",
-        email: "roletest@test.example",
+        email: uniqueEmail("roletest"),
         password: "password123",
       },
     });
@@ -225,7 +229,7 @@ test.describe("Security", () => {
     const register = await request.post(`${BASE}/api/auth/register`, {
       data: {
         name: "Hash Check",
-        email: "hashcheck@test.example",
+        email: uniqueEmail("hashcheck"),
         password: "password123",
       },
     });

@@ -2,6 +2,10 @@ import { test, expect } from "@playwright/test";
 
 const BASE = "https://ethio-telecom-rms.vercel.app";
 
+function uniqueEmail(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@test.example`;
+}
+
 async function loginAs(request: any, email: string, password = "password123") {
   const res = await request.post(`${BASE}/api/auth/login`, {
     data: { email, password },
@@ -19,7 +23,7 @@ test.describe("Tickets", () => {
   test("customer creates ticket with subject + serviceNumber", async ({
     request,
   }) => {
-    const email = "tkt-create@test.example";
+    const email = uniqueEmail("tkt-create");
     const reg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Ticket Creator", email, password: "password123" },
     });
@@ -45,7 +49,7 @@ test.describe("Tickets", () => {
   });
 
   test("customer sees only own tickets", async ({ request }) => {
-    const email = "tkt-owner@test.example";
+    const email = uniqueEmail("tkt-owner");
     const reg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Ticket Owner", email, password: "password123" },
     });
@@ -58,7 +62,7 @@ test.describe("Tickets", () => {
       data: {
         subject: "My ticket",
         category: "SLOW_SPEED",
-        description: "Test",
+        description: "Test issue description",
       },
     });
 
@@ -75,12 +79,12 @@ test.describe("Tickets", () => {
 
   test("technician sees only assigned tickets", async ({ request }) => {
     const adminToken = await loginAs(request, "admin@ethiotelecom.et");
-    const techEmail = "tech-viewer@test.example";
+    const techEmail = uniqueEmail("tech-viewer");
     const techReg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Tech Viewer", email: techEmail, password: "password123" },
     });
 
-    const custEmail = "cust-for-tech@test.example";
+    const custEmail = uniqueEmail("cust-for-tech");
     const custReg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Cust For Tech", email: custEmail, password: "password123" },
     });
@@ -92,7 +96,7 @@ test.describe("Tickets", () => {
       data: {
         subject: "Router issue",
         category: "ROUTER",
-        description: "Test",
+        description: "Test issue description",
       },
     });
     const { data: ticket } = await ticketRes.json();
@@ -119,7 +123,7 @@ test.describe("Tickets", () => {
   });
 
   test("get ticket detail with queue info", async ({ request }) => {
-    const email = "tkt-queue@test.example";
+    const email = uniqueEmail("tkt-queue");
     const reg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Queue Test", email, password: "password123" },
     });
@@ -147,8 +151,8 @@ test.describe("Tickets", () => {
   });
 
   test("customer cannot view another's ticket", async ({ request }) => {
-    const email1 = "tkt-priv1@test.example";
-    const email2 = "tkt-priv2@test.example";
+    const email1 = uniqueEmail("tkt-priv1");
+    const email2 = uniqueEmail("tkt-priv2");
 
     const reg1 = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Cust1", email: email1, password: "password123" },
@@ -180,7 +184,7 @@ test.describe("Tickets", () => {
 
   test("admin assigns ticket to technician", async ({ request }) => {
     const adminToken = await loginAs(request, "admin@ethiotelecom.et");
-    const custEmail = "tkt-assign@test.example";
+    const custEmail = uniqueEmail("tkt-assign");
     const custReg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Assign Cust", email: custEmail, password: "password123" },
     });
@@ -214,7 +218,7 @@ test.describe("Tickets", () => {
   test("technician marks ticket resolved", async ({ request }) => {
     const adminToken = await loginAs(request, "admin@ethiotelecom.et");
     const techToken = await loginAs(request, "tech@ethiotelecom.et");
-    const custEmail = "tkt-resolve@test.example";
+    const custEmail = uniqueEmail("tkt-resolve");
     const custReg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Resolve Cust", email: custEmail, password: "password123" },
     });
@@ -256,7 +260,7 @@ test.describe("Tickets", () => {
   test("customer reviews resolved ticket", async ({ request }) => {
     const adminToken = await loginAs(request, "admin@ethiotelecom.et");
     const techToken = await loginAs(request, "tech@ethiotelecom.et");
-    const custEmail = "tkt-review@test.example";
+    const custEmail = uniqueEmail("tkt-review");
     const custReg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Review Cust", email: custEmail, password: "password123" },
     });
@@ -303,8 +307,10 @@ test.describe("Tickets", () => {
   });
 
   test("only assigned tech can resolve their ticket", async ({ request }) => {
-    const adminToken = await loginAs(request, "admin@ethiotelecom.et");
-    const custEmail = "tkt-unassign@test.example";
+    // A technician who is NOT assigned to the ticket must be blocked (403).
+    // Admins are intentionally allowed to resolve any ticket.
+    const techToken = await loginAs(request, "tech@ethiotelecom.et");
+    const custEmail = uniqueEmail("tkt-unassign");
     const custReg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Unassign Cust", email: custEmail, password: "password123" },
     });
@@ -315,16 +321,16 @@ test.describe("Tickets", () => {
       data: {
         subject: "Unassigned resolve test",
         category: "NO_CONNECTION",
-        description: "Test",
+        description: "Test issue description",
       },
     });
     const { data: ticket } = await create.json();
 
-    // Try to resolve without being assigned
+    // Technician tries to resolve a ticket not assigned to them
     const resolve = await request.post(
       `${BASE}/api/tickets/${ticket.id}/resolve`,
       {
-        headers: { Authorization: `Bearer ${adminToken}` },
+        headers: { Authorization: `Bearer ${techToken}` },
       }
     );
     expect(resolve.status()).toBe(403);

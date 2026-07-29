@@ -2,6 +2,10 @@ import { test, expect } from "@playwright/test";
 
 const BASE = "https://ethio-telecom-rms.vercel.app";
 
+function uniqueEmail(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@test.example`;
+}
+
 async function loginAs(request: any, email: string) {
   const res = await request.post(`${BASE}/api/auth/login`, {
     data: { email, password: "password123" },
@@ -15,7 +19,7 @@ async function loginAs(request: any, email: string) {
 
 test.describe("Appointments", () => {
   test("customer reserves branch appointment", async ({ request }) => {
-    const email = "appt-reserve@test.example";
+    const email = uniqueEmail("appt-reserve");
     const reg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Appt Reserver", email, password: "password123" },
     });
@@ -37,7 +41,7 @@ test.describe("Appointments", () => {
   });
 
   test("cannot reserve past slot", async ({ request }) => {
-    const email = "appt-past@test.example";
+    const email = uniqueEmail("appt-past");
     const reg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Appt Past", email, password: "password123" },
     });
@@ -55,7 +59,7 @@ test.describe("Appointments", () => {
   });
 
   test("customer cancels own appointment", async ({ request }) => {
-    const email = "appt-cancel@test.example";
+    const email = uniqueEmail("appt-cancel");
     const reg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Appt Canceller", email, password: "password123" },
     });
@@ -83,7 +87,7 @@ test.describe("Appointments", () => {
   test("customer cannot complete appointment (staff only)", async ({
     request,
   }) => {
-    const email = "appt-nocomplete@test.example";
+    const email = uniqueEmail("appt-nocomplete");
     const reg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Appt No Complete", email, password: "password123" },
     });
@@ -108,7 +112,7 @@ test.describe("Appointments", () => {
 
   test("admin marks appointment completed", async ({ request }) => {
     const adminToken = await loginAs(request, "admin@ethiotelecom.et");
-    const custEmail = "appt-admincomplete@test.example";
+    const custEmail = uniqueEmail("appt-admincomplete");
     const custReg = await request.post(`${BASE}/api/auth/register`, {
       data: { name: "Appt Admin", email: custEmail, password: "password123" },
     });
