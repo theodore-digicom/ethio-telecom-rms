@@ -1,0 +1,12 @@
+   ▲ Next.js 15.5.22
+   - Local:        http://localhost:3055
+   - Network:      http://192.168.1.5:3055
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 1468ms
+ ✓ Compiled /api/health in 150ms (296 modules)
+ GET /api/health 200 in 234ms
+ ✓ Compiled /api/auth/forgot-password in 153ms (408 modules)
+ POST /api/auth/forgot-password 200 in 3245ms
+[?25h

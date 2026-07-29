@@ -1,0 +1,570 @@
+
+> ethio-telecom-rms-api@0.1.0 test
+> playwright test
+
+
+Running 37 tests using 4 workers
+
+[1/37] tests/appointments.spec.ts:19:7 › Appointments › customer reserves branch appointment
+[2/37] tests/auth.spec.ts:6:7 › Auth › register new customer
+[3/37] tests/tickets.spec.ts:19:7 › Tickets › customer creates ticket with subject + serviceNumber
+[4/37] tests/security.spec.ts:19:7 › Security › admin routes blocked for non-admin
+  1) tests/tickets.spec.ts:19:7 › Tickets › customer creates ticket with subject + serviceNumber ───
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Tickets", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:22:19
+
+    Error Context: test-results/tickets-Tickets-customer-c-4cb2b--with-subject-serviceNumber/error-context.md
+
+
+  2) tests/appointments.spec.ts:19:7 › Appointments › customer reserves branch appointment ─────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Appointments", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/appointments.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/appointments.spec.ts:20:19
+
+    Error Context: test-results/appointments-Appointments--420e7-reserves-branch-appointment/error-context.md
+
+
+  3) tests/security.spec.ts:19:7 › Security › admin routes blocked for non-admin ───────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Security", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:20:23
+
+    Error Context: test-results/security-Security-admin-routes-blocked-for-non-admin/error-context.md
+
+
+  4) tests/auth.spec.ts:6:7 › Auth › register new customer ─────────────────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: 409
+
+      13 |       },
+      14 |     });
+    > 15 |     expect(res.status()).toBe(201);
+         |                          ^
+      16 |     const { data } = await res.json();
+      17 |     expect(data.user.email).toBe("john@test.example");
+      18 |     expect(data.accessToken).toBeTruthy();
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/auth.spec.ts:15:26
+
+    Error Context: test-results/auth-Auth-register-new-customer/error-context.md
+
+
+[5/37] tests/security.spec.ts:28:7 › Security › admin queue shows all tickets
+[6/37] tests/tickets.spec.ts:41:7 › Tickets › customer sees only own tickets
+[7/37] tests/auth.spec.ts:22:7 › Auth › register with duplicate email fails
+[8/37] tests/appointments.spec.ts:37:7 › Appointments › cannot reserve past slot
+[9/37] tests/auth.spec.ts:33:7 › Auth › login returns tokens
+  5) tests/tickets.spec.ts:41:7 › Tickets › customer sees only own tickets ─────────────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Tickets", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:42:19
+
+    Error Context: test-results/tickets-Tickets-customer-sees-only-own-tickets/error-context.md
+
+
+  6) tests/appointments.spec.ts:37:7 › Appointments › cannot reserve past slot ─────────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Appointments", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/appointments.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/appointments.spec.ts:38:19
+
+    Error Context: test-results/appointments-Appointments-cannot-reserve-past-slot/error-context.md
+
+
+  7) tests/security.spec.ts:28:7 › Security › admin queue shows all tickets ────────────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Security", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:30:23
+
+    Error Context: test-results/security-Security-admin-queue-shows-all-tickets/error-context.md
+
+
+  8) tests/auth.spec.ts:33:7 › Auth › login returns tokens ─────────────────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 401
+
+      38 |       },
+      39 |     });
+    > 40 |     expect(res.status()).toBe(200);
+         |                          ^
+      41 |     const { data } = await res.json();
+      42 |     expect(data.accessToken).toBeTruthy();
+      43 |     expect(data.refreshToken).toBeTruthy();
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/auth.spec.ts:40:26
+
+    Error Context: test-results/auth-Auth-login-returns-tokens/error-context.md
+
+
+[10/37] tests/tickets.spec.ts:60:7 › Tickets › technician sees only assigned tickets
+[11/37] tests/appointments.spec.ts:51:7 › Appointments › customer cancels own appointment
+[12/37] tests/security.spec.ts:60:7 › Security › technician cannot list customer tickets
+[13/37] tests/auth.spec.ts:46:7 › Auth › login with wrong password fails
+  9) tests/appointments.spec.ts:51:7 › Appointments › customer cancels own appointment ─────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Appointments", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/appointments.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/appointments.spec.ts:52:19
+
+    Error Context: test-results/appointments-Appointments-customer-cancels-own-appointment/error-context.md
+
+
+  10) tests/security.spec.ts:60:7 › Security › technician cannot list customer tickets ─────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Security", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:61:23
+
+    Error Context: test-results/security-Security-technician-cannot-list-customer-tickets/error-context.md
+
+
+  11) tests/tickets.spec.ts:60:7 › Tickets › technician sees only assigned tickets ─────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Tickets", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:66:33
+
+    Error Context: test-results/tickets-Tickets-technician-sees-only-assigned-tickets/error-context.md
+
+
+[14/37] tests/auth.spec.ts:56:7 › Auth › refresh token rotates
+[15/37] tests/appointments.spec.ts:73:7 › Appointments › customer cannot complete appointment (staff only)
+  12) tests/auth.spec.ts:56:7 › Auth › refresh token rotates ───────────────────────────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'refreshToken')
+
+      59 |     });
+      60 |     const { data: loginData } = await login.json();
+    > 61 |     const oldRefresh = loginData.refreshToken;
+         |                                  ^
+      62 |
+      63 |     const refresh = await request.post(`${BASE}/api/auth/refresh`, {
+      64 |       data: { refreshToken: oldRefresh },
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/auth.spec.ts:61:34
+
+    Error Context: test-results/auth-Auth-refresh-token-rotates/error-context.md
+
+
+[16/37] tests/security.spec.ts:82:7 › Security › refresh token single-use
+  13) tests/appointments.spec.ts:73:7 › Appointments › customer cannot complete appointment (staff only) 
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Appointments", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/appointments.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/appointments.spec.ts:76:19
+
+    Error Context: test-results/appointments-Appointments--a4a3d-ete-appointment-staff-only-/error-context.md
+
+
+[17/37] tests/tickets.spec.ts:97:7 › Tickets › get ticket detail with queue info
+  14) tests/security.spec.ts:82:7 › Security › refresh token single-use ────────────────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'refreshToken')
+
+      88 |     // Use refresh token
+      89 |     const r1 = await request.post(`${BASE}/api/auth/refresh`, {
+    > 90 |       data: { refreshToken: loginData.refreshToken },
+         |                                       ^
+      91 |     });
+      92 |     expect(r1.status()).toBe(200);
+      93 |
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:90:39
+
+    Error Context: test-results/security-Security-refresh-token-single-use/error-context.md
+
+
+  15) tests/tickets.spec.ts:97:7 › Tickets › get ticket detail with queue info ─────────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Tickets", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:98:19
+
+    Error Context: test-results/tickets-Tickets-get-ticket-detail-with-queue-info/error-context.md
+
+
+[18/37] tests/auth.spec.ts:78:7 › Auth › get me returns current user
+[19/37] tests/appointments.spec.ts:95:7 › Appointments › admin marks appointment completed
+[20/37] tests/security.spec.ts:101:7 › Security › invalid JWT rejected
+[21/37] tests/tickets.spec.ts:123:7 › Tickets › customer cannot view another's ticket
+[22/37] tests/security.spec.ts:108:7 › Security › expired access token blocked
+[23/37] tests/auth.spec.ts:93:7 › Auth › change password revokes sessions
+  16) tests/appointments.spec.ts:95:7 › Appointments › admin marks appointment completed ───────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Appointments", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/appointments.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/appointments.spec.ts:96:23
+
+    Error Context: test-results/appointments-Appointments-admin-marks-appointment-completed/error-context.md
+
+
+[24/37] tests/security.spec.ts:119:7 › Security › ownership blocks access to another customer's ticket
+  17) tests/auth.spec.ts:93:7 › Auth › change password revokes sessions ────────────────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'refreshToken')
+
+       96 |     });
+       97 |     const { data: loginData } = await login.json();
+    >  98 |     const refresh1 = loginData.refreshToken;
+          |                                ^
+       99 |
+      100 |     // Change password
+      101 |     const change = await request.post(`${BASE}/api/auth/change-password`, {
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/auth.spec.ts:98:32
+
+    Error Context: test-results/auth-Auth-change-password-revokes-sessions/error-context.md
+
+
+  18) tests/tickets.spec.ts:123:7 › Tickets › customer cannot view another's ticket ────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Tickets", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:124:20
+
+    Error Context: test-results/tickets-Tickets-customer-cannot-view-another-s-ticket/error-context.md
+
+
+  19) tests/security.spec.ts:119:7 › Security › ownership blocks access to another customer's ticket 
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Security", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:122:24
+
+    Error Context: test-results/security-Security-ownershi-76237-o-another-customer-s-ticket/error-context.md
+
+
+[25/37] tests/auth.spec.ts:123:7 › Auth › forgot-password + reset-password flow
+[26/37] tests/tickets.spec.ts:145:7 › Tickets › admin assigns ticket to technician
+[27/37] tests/security.spec.ts:160:7 › Security › customer cannot reassign own ticket
+  20) tests/security.spec.ts:160:7 › Security › customer cannot reassign own ticket ────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Security", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:161:23
+
+    Error Context: test-results/security-Security-customer-cannot-reassign-own-ticket/error-context.md
+
+
+  21) tests/tickets.spec.ts:145:7 › Tickets › admin assigns ticket to technician ───────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Tickets", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:147:23
+
+    Error Context: test-results/tickets-Tickets-admin-assigns-ticket-to-technician/error-context.md
+
+
+[28/37] tests/security.spec.ts:189:7 › Security › technician cannot resolve unassigned ticket
+[29/37] tests/tickets.spec.ts:174:7 › Tickets › technician marks ticket resolved
+  22) tests/security.spec.ts:189:7 › Security › technician cannot resolve unassigned ticket ────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Security", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:190:23
+
+    Error Context: test-results/security-Security-technici-4a72a-t-resolve-unassigned-ticket/error-context.md
+
+
+  23) tests/tickets.spec.ts:174:7 › Tickets › technician marks ticket resolved ─────────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Tickets", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:176:23
+
+    Error Context: test-results/tickets-Tickets-technician-marks-ticket-resolved/error-context.md
+
+
+[30/37] tests/security.spec.ts:213:7 › Security › register only creates CUSTOMER role
+  24) tests/security.spec.ts:213:7 › Security › register only creates CUSTOMER role ────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'user')
+
+      220 |     });
+      221 |     const { data } = await register.json();
+    > 222 |     expect(data.user.role).toBe("CUSTOMER");
+          |                 ^
+      223 |   });
+      224 |
+      225 |   test("password hashes not in response", async ({ request }) => {
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:222:17
+
+    Error Context: test-results/security-Security-register-only-creates-CUSTOMER-role/error-context.md
+
+
+[31/37] tests/tickets.spec.ts:212:7 › Tickets › customer reviews resolved ticket
+[32/37] tests/security.spec.ts:225:7 › Security › password hashes not in response
+  25) tests/tickets.spec.ts:212:7 › Tickets › customer reviews resolved ticket ─────────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Tickets", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:214:23
+
+    Error Context: test-results/tickets-Tickets-customer-reviews-resolved-ticket/error-context.md
+
+
+  26) tests/security.spec.ts:225:7 › Security › password hashes not in response ────────────────────
+
+    Error: expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "password"
+    Received string:        "{\"error\":\"invalid email or password\"}"
+
+      230 |     const jsonStr = JSON.stringify(json);
+      231 |     // Should not leak password or hash
+    > 232 |     expect(jsonStr.toLowerCase()).not.toContain("password");
+          |                                       ^
+      233 |   });
+      234 | });
+      235 |
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/security.spec.ts:232:39
+
+    Error Context: test-results/security-Security-password-hashes-not-in-response/error-context.md
+
+
+[33/37] tests/tickets.spec.ts:257:7 › Tickets › only assigned tech can resolve their ticket
+  27) tests/auth.spec.ts:123:7 › Auth › forgot-password + reset-password flow ──────────────────────
+
+    Error: expect(received).toBeTruthy()
+
+    Received: undefined
+
+      129 |     const { data: forgotData } = await forgot.json();
+      130 |     const token = forgotData.devResetToken;
+    > 131 |     expect(token).toBeTruthy(); // Token must be returned in dev mode
+          |                   ^
+      132 |
+      133 |     const reset = await request.post(`${BASE}/api/auth/reset-password`, {
+      134 |       data: { token, newPassword: "resetpass789" },
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/auth.spec.ts:131:19
+
+    Error Context: test-results/auth-Auth-forgot-password-reset-password-flow/error-context.md
+
+
+  28) tests/tickets.spec.ts:257:7 › Tickets › only assigned tech can resolve their ticket ──────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      13 |   }
+      14 |   const json = await res.json();
+    > 15 |   return json.data.accessToken;
+         |                    ^
+      16 | }
+      17 |
+      18 | test.describe("Tickets", () => {
+        at loginAs (/Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:15:20)
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/tickets.spec.ts:259:23
+
+    Error Context: test-results/tickets-Tickets-only-assigned-tech-can-resolve-their-ticket/error-context.md
+
+
+[34/37] tests/auth.spec.ts:161:7 › Auth › logout revokes refresh token
+[35/37] tests/auth.spec.ts:179:7 › Auth › missing auth header blocks protected routes
+[36/37] tests/auth.spec.ts:186:7 › Auth › bad token blocks access
+[37/37] tests/auth.spec.ts:193:7 › Auth › PATCH profile updates fields
+  29) tests/auth.spec.ts:193:7 › Auth › PATCH profile updates fields ───────────────────────────────
+
+    TypeError: Cannot read properties of undefined (reading 'accessToken')
+
+      198 |
+      199 |     const patch = await request.patch(`${BASE}/api/auth/me`, {
+    > 200 |       headers: { Authorization: `Bearer ${data.accessToken}` },
+          |                                                ^
+      201 |       data: { phone: "+251922222222", name: "Sara Updated" },
+      202 |     });
+      203 |     expect(patch.status()).toBe(200);
+        at /Users/macbookairm4/Documents/work/intern/week/1/tests/auth.spec.ts:200:48
+
+    Error Context: test-results/auth-Auth-PATCH-profile-updates-fields/error-context.md
+
+
+  29 failed
+    tests/appointments.spec.ts:19:7 › Appointments › customer reserves branch appointment ──────────
+    tests/appointments.spec.ts:37:7 › Appointments › cannot reserve past slot ──────────────────────
+    tests/appointments.spec.ts:51:7 › Appointments › customer cancels own appointment ──────────────
+    tests/appointments.spec.ts:73:7 › Appointments › customer cannot complete appointment (staff only) 
+    tests/appointments.spec.ts:95:7 › Appointments › admin marks appointment completed ─────────────
+    tests/auth.spec.ts:6:7 › Auth › register new customer ──────────────────────────────────────────
+    tests/auth.spec.ts:33:7 › Auth › login returns tokens ──────────────────────────────────────────
+    tests/auth.spec.ts:56:7 › Auth › refresh token rotates ─────────────────────────────────────────
+    tests/auth.spec.ts:93:7 › Auth › change password revokes sessions ──────────────────────────────
+    tests/auth.spec.ts:123:7 › Auth › forgot-password + reset-password flow ────────────────────────
+    tests/auth.spec.ts:193:7 › Auth › PATCH profile updates fields ─────────────────────────────────
+    tests/security.spec.ts:19:7 › Security › admin routes blocked for non-admin ────────────────────
+    tests/security.spec.ts:28:7 › Security › admin queue shows all tickets ─────────────────────────
+    tests/security.spec.ts:60:7 › Security › technician cannot list customer tickets ───────────────
+    tests/security.spec.ts:82:7 › Security › refresh token single-use ──────────────────────────────
+    tests/security.spec.ts:119:7 › Security › ownership blocks access to another customer's ticket ─
+    tests/security.spec.ts:160:7 › Security › customer cannot reassign own ticket ──────────────────
+    tests/security.spec.ts:189:7 › Security › technician cannot resolve unassigned ticket ──────────
+    tests/security.spec.ts:213:7 › Security › register only creates CUSTOMER role ──────────────────
+    tests/security.spec.ts:225:7 › Security › password hashes not in response ──────────────────────
+    tests/tickets.spec.ts:19:7 › Tickets › customer creates ticket with subject + serviceNumber ────
+    tests/tickets.spec.ts:41:7 › Tickets › customer sees only own tickets ──────────────────────────
+    tests/tickets.spec.ts:60:7 › Tickets › technician sees only assigned tickets ───────────────────
+    tests/tickets.spec.ts:97:7 › Tickets › get ticket detail with queue info ───────────────────────
+    tests/tickets.spec.ts:123:7 › Tickets › customer cannot view another's ticket ──────────────────
+    tests/tickets.spec.ts:145:7 › Tickets › admin assigns ticket to technician ─────────────────────
+    tests/tickets.spec.ts:174:7 › Tickets › technician marks ticket resolved ───────────────────────
+    tests/tickets.spec.ts:212:7 › Tickets › customer reviews resolved ticket ───────────────────────
+    tests/tickets.spec.ts:257:7 › Tickets › only assigned tech can resolve their ticket ────────────
+  8 passed (7.0s)
