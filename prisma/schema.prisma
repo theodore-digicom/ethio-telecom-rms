@@ -35,6 +35,24 @@ enum AppointmentStatus {
   CANCELLED
 }
 
+enum AuditAction {
+  USER_CREATED
+  USER_UPDATED
+  USER_BANNED
+  USER_UNBANNED
+  USER_DELETED
+  USER_PASSWORD_RESET
+  ROLE_CHANGED
+  LOGIN_ATTEMPT
+  LOGOUT
+}
+
+enum AuditResourceType {
+  USER
+  TICKET
+  APPOINTMENT
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String
@@ -42,7 +60,10 @@ model User {
   phone     String?
   password  String
   role      Role     @default(CUSTOMER)
+  banned    Boolean  @default(false)
+  bannedAt  DateTime?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   tickets       Ticket[]       @relation("CustomerTickets")
   assignedTasks Ticket[]       @relation("TechnicianTickets")
@@ -51,6 +72,7 @@ model User {
   notifications Notification[]
   refreshTokens RefreshToken[]
   resetTokens   PasswordResetToken[]
+  auditLogs     AuditLog[]     @relation("AdminActions")
 }
 
 model PasswordResetToken {
@@ -136,4 +158,25 @@ model Notification {
 
   ticketId String?
   ticket   Ticket? @relation(fields: [ticketId], references: [id])
+}
+
+model AuditLog {
+  id            String              @id @default(cuid())
+  action        AuditAction
+  resourceType  AuditResourceType
+  resourceId    String              // id of affected resource (user, ticket, etc)
+  description   String              // human-readable summary
+  changes       String?             // JSON diff of what changed
+  performedBy   String              // admin userId who performed action
+  performedByUser User              @relation(fields: [performedBy], references: [id], onDelete: Cascade, name: "AdminActions")
+  ipAddress     String?             // IP of requester
+  userAgent     String?             // browser info
+  status        String              @default("success") // success | failed
+  errorMessage  String?
+  createdAt     DateTime            @default(now())
+
+  @@index([performedBy])
+  @@index([resourceId])
+  @@index([resourceType])
+  @@index([createdAt])
 }
