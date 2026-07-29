@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -63,7 +63,7 @@ model User {
   banned    Boolean  @default(false)
   bannedAt  DateTime?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 
   tickets       Ticket[]       @relation("CustomerTickets")
   assignedTasks Ticket[]       @relation("TechnicianTickets")
@@ -109,7 +109,7 @@ model Ticket {
   status       TicketStatus @default(OPEN)
   priority     Priority     @default(MEDIUM)
   createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  updatedAt    DateTime     @default(now()) @updatedAt
   resolvedAt   DateTime?
 
   customerId String
