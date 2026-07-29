@@ -11,7 +11,10 @@ export const POST = handler(async (req, { params }) => {
     return fail("Cannot ban yourself", 400);
   }
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, banned: true },
+  });
   if (!user) {
     return fail("User not found", 404);
   }

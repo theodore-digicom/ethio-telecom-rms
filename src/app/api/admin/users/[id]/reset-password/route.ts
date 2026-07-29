@@ -9,7 +9,10 @@ export const POST = handler(async (req, { params }) => {
   const admin = await requireAuth(req, ["ADMIN"]);
   const userId = params.id;
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true },
+  });
   if (!user) {
     return fail("User not found", 404);
   }
