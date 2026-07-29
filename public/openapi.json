@@ -1,0 +1,356 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Ethio Telecom RMS API",
+    "description": "Report Management System - JWT Auth, Queue System, Technician Assignment",
+    "version": "1.0.0",
+    "contact": { "name": "Support", "email": "support@ethiotelecom.et" }
+  },
+  "servers": [
+    { "url": "http://localhost:3000", "description": "Development" },
+    { "url": "https://ethio-telecom-rms.vercel.app", "description": "Production" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Service healthy"
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register customer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "password": { "type": "string" },
+                  "phone": { "type": "string" }
+                },
+                "required": ["name", "email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created" },
+          "409": { "description": "Email already in use" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login with email/password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "email": { "type": "string" }, "password": { "type": "string" } },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful, returns accessToken + refreshToken" },
+          "401": { "description": "Invalid credentials or account banned" }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh token (single-use, rotates)",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "properties": { "refreshToken": { "type": "string" } } } } }
+        },
+        "responses": { "200": { "description": "New tokens issued" }, "401": { "description": "Invalid or revoked" } }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout (revoke refresh token)",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "refreshToken": { "type": "string" }, "allDevices": { "type": "boolean" } } } } } },
+        "responses": { "200": { "description": "Logged out" } }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get current user profile",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "User profile" }, "401": { "description": "Unauthorized" } }
+      },
+      "patch": {
+        "tags": ["Auth"],
+        "summary": "Update profile (name/email/phone)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "properties": { "name": { "type": "string" }, "email": { "type": "string" }, "phone": { "type": "string" } } } } } },
+        "responses": { "200": { "description": "Updated" } }
+      },
+      "delete": {
+        "tags": ["Auth"],
+        "summary": "Delete account",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Deleted" }, "400": { "description": "Has tickets" } }
+      }
+    },
+    "/api/tickets": {
+      "post": {
+        "tags": ["Tickets"],
+        "summary": "Create support ticket",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "subject": { "type": "string", "example": "No internet since morning" },
+                  "serviceNumber": { "type": "string" },
+                  "category": { "type": "string", "example": "NO_CONNECTION" },
+                  "description": { "type": "string" },
+                  "priority": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"] }
+                },
+                "required": ["subject", "category", "description"]
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Ticket created with ticketNumber ETC-YYYYMMDD-NNNN" } }
+      },
+      "get": {
+        "tags": ["Tickets"],
+        "summary": "List tickets (role-scoped: customer=own, tech=assigned, admin=all)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Ticket list" } }
+      }
+    },
+    "/api/tickets/{id}": {
+      "get": {
+        "tags": ["Tickets"],
+        "summary": "Get ticket + queue info (position, ahead, ETA)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Ticket" }, "404": { "description": "Not found" } }
+      },
+      "patch": {
+        "tags": ["Tickets"],
+        "summary": "Update ticket (customer cancels, staff updates status/priority)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Updated" }, "403": { "description": "Not owner" } }
+      }
+    },
+    "/api/tickets/{id}/queue": {
+      "get": {
+        "tags": ["Tickets"],
+        "summary": "Real-time queue position + ETA (position = ahead × 45 min)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Queue info: {position, ahead, estimatedWaitMinutes}" } }
+      }
+    },
+    "/api/tickets/{id}/assign": {
+      "post": {
+        "tags": ["Tickets"],
+        "summary": "Assign technician to ticket (admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "technicianId": { "type": "string" } } } } } },
+        "responses": { "200": { "description": "Assigned" }, "403": { "description": "Admin only" } }
+      }
+    },
+    "/api/tickets/{id}/resolve": {
+      "post": {
+        "tags": ["Tickets"],
+        "summary": "Mark ticket fixed (tech/admin only, tech=own only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Resolved, customer notified" }, "403": { "description": "Not assigned" } }
+      }
+    },
+    "/api/tickets/{id}/reopen": {
+      "post": {
+        "tags": ["Tickets"],
+        "summary": "Reopen resolved ticket (RESOLVED → IN_PROGRESS)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Reopened" }, "400": { "description": "Not resolved" } }
+      }
+    },
+    "/api/tickets/{id}/review": {
+      "post": {
+        "tags": ["Tickets"],
+        "summary": "Customer reviews resolved ticket (1-5 rating)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "properties": { "rating": { "type": "number", "minimum": 1, "maximum": 5 }, "comment": { "type": "string" } } } } } },
+        "responses": { "200": { "description": "Review saved" } }
+      }
+    },
+    "/api/appointments": {
+      "post": {
+        "tags": ["Appointments"],
+        "summary": "Reserve branch support slot",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "branch": { "type": "string" }, "slotTime": { "type": "string", "format": "date-time" }, "notes": { "type": "string" } } } } } },
+        "responses": { "201": { "description": "Appointment created" }, "400": { "description": "Double-booked or past time" } }
+      },
+      "get": {
+        "tags": ["Appointments"],
+        "summary": "List appointments (role-scoped)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Appointment list" } }
+      }
+    },
+    "/api/appointments/{id}": {
+      "patch": {
+        "tags": ["Appointments"],
+        "summary": "Update appointment (status: RESERVED/COMPLETED/CANCELLED)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "enum": ["RESERVED", "COMPLETED", "CANCELLED"] } } } } } },
+        "responses": { "200": { "description": "Updated" } }
+      }
+    },
+    "/api/admin/users": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Invite technician/admin (admin only, sends email with temp password)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "email": { "type": "string" }, "name": { "type": "string" }, "role": { "type": "string", "enum": ["ADMIN", "TECHNICIAN"] } } } } } },
+        "responses": { "201": { "description": "Invited" }, "403": { "description": "Admin only" } }
+      },
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List all users (admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "User list" } }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "View user details (admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "User" } }
+      },
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Update user (name/email/role/phone)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Updated" } }
+      },
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "Delete user (cascading cascade)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Deleted" } }
+      }
+    },
+    "/api/admin/users/{id}/ban": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Ban user (prevents login, revokes sessions)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Banned" } }
+      }
+    },
+    "/api/admin/users/{id}/unban": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Unban user",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Unbanned" } }
+      }
+    },
+    "/api/admin/users/{id}/reset-password": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Force password reset (sends temp password via email)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Email sent with temp password" } }
+      }
+    },
+    "/api/admin/audit": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "View audit logs (admin only, paginated)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "skip", "in": "query", "schema": { "type": "number" } },
+          { "name": "take", "in": "query", "schema": { "type": "number" } },
+          { "name": "userId", "in": "query", "schema": { "type": "string" } },
+          { "name": "action", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Audit logs with pagination" } }
+      }
+    },
+    "/api/technicians": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List technicians + workload (admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Technician list with activeTickets count" } }
+      }
+    },
+    "/api/admin/queue": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "View full ticket queue (ordered: priority → FIFO, admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Queue with positions" } }
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "List notifications (supports ?unread=1)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Notification list" } }
+      }
+    },
+    "/api/notifications/{id}": {
+      "patch": {
+        "tags": ["Notifications"],
+        "summary": "Mark notification read",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Marked read" } }
+      }
+    }
+  }
+}
