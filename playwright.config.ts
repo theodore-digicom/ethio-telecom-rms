@@ -5,10 +5,15 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   reporter: "html",
   use: {
-    baseURL: "https://ethio-telecom-rms.vercel.app",
+    baseURL: "http://localhost:3055",
     trace: "on-first-retry",
+  },
+  webServer: {
+    command: "npx next dev -p 3055",
+    url: "http://localhost:3055/api/health",
+    reuseExistingServer: !process.env.CI,
   },
 });
