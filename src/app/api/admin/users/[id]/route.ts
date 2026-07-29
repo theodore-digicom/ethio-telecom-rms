@@ -27,8 +27,6 @@ export const GET = handler(async (req, { params }) => {
       name: true,
       phone: true,
       role: true,
-      banned: true,
-      bannedAt: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -72,7 +70,6 @@ export const PATCH = handler(async (req, { params }) => {
       name: true,
       phone: true,
       role: true,
-      banned: true,
     },
   });
 
