@@ -8,12 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:3055",
+    baseURL: "https://ethio-telecom-rms.vercel.app",
     trace: "on-first-retry",
-  },
-  webServer: {
-    command: "npx next dev -p 3055",
-    url: "http://localhost:3055/api/health",
-    reuseExistingServer: !process.env.CI,
   },
 });
