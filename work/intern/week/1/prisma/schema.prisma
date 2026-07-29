@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  TECHNICIAN
+  ADMIN
+}
+
+enum TicketStatus {
+  OPEN        // reported, waiting in queue
+  ASSIGNED    // technician assigned
+  IN_PROGRESS // technician working
+  RESOLVED    // marked fixed
+  CLOSED      // customer confirmed / auto-closed
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AppointmentStatus {
+  RESERVED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  password  String
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+
+  tickets       Ticket[]       @relation("CustomerTickets")
+  assignedTasks Ticket[]       @relation("TechnicianTickets")
+  appointments  Appointment[]
+  reviews       Review[]
+  notifications Notification[]
+  refreshTokens RefreshToken[]
+  resetTokens   PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique // sha256 of the opaque reset token; raw is emailed, never stored
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime? // single-use: set once consumed
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique // sha256 of the opaque refresh token; raw is never stored
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime? // set on rotation or logout
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Ticket {
+  id           String       @id @default(cuid())
+  ticketNumber String       @unique
+  subject       String      // short summary, e.g. "No internet since morning"
+  serviceNumber String?     // customer's Ethio Telecom line/account number, if any
+  category      String      // e.g. NO_CONNECTION, SLOW_SPEED, ROUTER, BILLING
+  description   String
+  status       TicketStatus @default(OPEN)
+  priority     Priority     @default(MEDIUM)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  resolvedAt   DateTime?
+
+  customerId String
+  customer   User   @relation("CustomerTickets", fields: [customerId], references: [id])
+
+  technicianId String?
+  technician   User?   @relation("TechnicianTickets", fields: [technicianId], references: [id])
+
+  review        Review?
+  notifications Notification[]
+}
+
+model Appointment {
+  id       String            @id @default(cuid())
+  branch   String
+  slotTime DateTime
+  status   AppointmentStatus @default(RESERVED)
+  notes    String?
+  createdAt DateTime         @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  ticketId String @unique
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  ticketId String?
+  ticket   Ticket? @relation(fields: [ticketId], references: [id])
+}
