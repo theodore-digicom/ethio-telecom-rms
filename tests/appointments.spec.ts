@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "http://localhost:3055";
+const BASE = "https://ethio-telecom-rms.vercel.app";
 
 async function loginAs(request: any, email: string) {
   const res = await request.post(`${BASE}/api/auth/login`, {
