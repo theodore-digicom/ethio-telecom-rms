@@ -19,6 +19,10 @@ export const POST = handler(async (req) => {
     throw new HttpError("Invalid email or password", 401);
   }
 
+  if (user.banned) {
+    throw new HttpError("Account banned", 403);
+  }
+
   const tokens = await issueTokens(user);
 
   return ok({
