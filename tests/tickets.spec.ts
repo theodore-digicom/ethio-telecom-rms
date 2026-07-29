@@ -12,7 +12,7 @@ async function loginAs(request: any, email: string, password = "password123") {
     );
   }
   const json = await res.json();
-  return json.data.accessToken;
+  return json.data?.accessToken;
 }
 
 test.describe("Tickets", () => {
