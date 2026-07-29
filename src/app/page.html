@@ -225,6 +225,30 @@
         }
         .success { color: #48bb78; }
         .error { color: #f56565; }
+        .req { color: #c53030; font-weight: 600; font-size: 0.8em; }
+        .opt { color: #718096; font-size: 0.8em; }
+        .ttype {
+            background: #edf2f7;
+            color: #2d3748;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+        .endpoint h4 {
+            margin-top: 18px;
+            margin-bottom: 6px;
+            color: #4a5568;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .endpoint table { margin: 6px 0 4px; background: white; }
+        .endpoint th, .endpoint td { padding: 8px 10px; font-size: 0.92em; }
+        .endpoint pre { margin: 6px 0; }
+        .endpoint > code { font-size: 1.05em; font-weight: 600; }
+        .auth-line { font-size: 0.9em; color: #555; margin-top: 6px; }
+        .auth-line strong { color: #2d3748; }
         @media (max-width: 768px) {
             header h1 {
                 font-size: 1.8em;
@@ -398,230 +422,703 @@
                 <li><strong>Bcrypt Hashing:</strong> Passwords hashed with 10 rounds, constant-time comparison</li>
                 <li><strong>Refresh Token Rotation:</strong> Each refresh invalidates the previous token</li>
                 <li><strong>Single-Use Reset Tokens:</strong> 60-minute TTL, marked used after redemption</li>
-                <li><strong>Banned Account Check:</strong> Banned users cannot login (403 "Account has been banned")</li>
+                <li><strong>Banned Account Check:</strong> Banned users cannot login (403 "Account banned")</li>
                 <li><strong>Ownership Verification:</strong> Customers only see own resources, techs only see assigned tickets</li>
                 <li><strong>Session Revocation:</strong> Password change revokes all other sessions</li>
             </ul>
         </section>
 
         <section id="endpoints">
-            <h2>🔌 All Endpoints (40+)</h2>
+            <h2>🔌 API Reference — All Endpoints</h2>
 
-            <h3>Authentication (8 endpoints)</h3>
+            <div class="info">
+                <strong>Global conventions (apply to every endpoint):</strong>
+                <ul>
+                    <li><strong>Success envelope:</strong> all successful JSON is wrapped as <code>{ "data": &lt;payload&gt; }</code>. The <em>Response</em> shapes below show the payload inside <code>data</code> (except <code>/api/health</code> and <code>/api/swagger.json</code>, which return raw bodies).</li>
+                    <li><strong>Error envelope:</strong> <code>{ "error": string, "details"?: any }</code>. Validation failures return <span class="status status-400">422</span> with <code>details</code> = Zod <code>{ formErrors: [], fieldErrors: {} }</code>. Malformed JSON → <span class="status status-400">400</span> <code>"Invalid JSON body"</code>. Unhandled errors → <span class="status status-500">500</span> <code>"Internal server error"</code>.</li>
+                    <li><strong>Auth header:</strong> protected routes require <code>Authorization: Bearer &lt;accessToken&gt;</code>. Access token TTL = <strong>15 min</strong> (HS256; claims <code>sub</code>=userId, <code>email</code>, <code>role</code>). Refresh token TTL = <strong>30 days</strong> (env <code>REFRESH_TTL_DAYS</code>), opaque, stored SHA-256 hashed, single-use. Reset token TTL = <strong>60 min</strong> (env <code>RESET_TTL_MINUTES</code>), single-use.</li>
+                    <li><strong>Field column legend:</strong> <span class="req">required</span> / <span class="opt">optional</span>; types shown as <span class="ttype">string</span>, <span class="ttype">number</span>, <span class="ttype">boolean</span>, <span class="ttype">enum</span>.</li>
+                </ul>
+            </div>
+
+            <div class="info">
+                <strong>Enums:</strong>
+                <ul>
+                    <li><strong>Role:</strong> <code>CUSTOMER</code> · <code>TECHNICIAN</code> · <code>ADMIN</code></li>
+                    <li><strong>TicketStatus:</strong> <code>OPEN</code> · <code>ASSIGNED</code> · <code>IN_PROGRESS</code> · <code>RESOLVED</code> · <code>CLOSED</code> · <code>CANCELLED</code></li>
+                    <li><strong>Priority:</strong> <code>LOW</code> · <code>MEDIUM</code> · <code>HIGH</code> · <code>URGENT</code></li>
+                    <li><strong>AppointmentStatus:</strong> <code>RESERVED</code> · <code>COMPLETED</code> · <code>CANCELLED</code></li>
+                    <li><strong>Category</strong> (free-form string; suggested): <code>NO_CONNECTION</code> · <code>SLOW_SPEED</code> · <code>ROUTER</code> · <code>BILLING</code> · <code>OTHER</code></li>
+                    <li><strong>Ticket number format:</strong> <code>ETC-YYYYMMDD-NNNN</code> (e.g. <code>ETC-20260728-4821</code>)</li>
+                </ul>
+            </div>
+
+            <h3>🔐 Authentication (10 endpoints)</h3>
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/auth/register</code>
-                <p>Register new customer account. Returns accessToken + refreshToken.</p>
-                <p><span class="role-badge public">Public</span></p>
+                <p>Register a new customer account. Role is hardcoded to <code>CUSTOMER</code> (staff are created by admins).</p>
+                <p class="auth-line"><span class="role-badge public">Public</span></p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>name</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 2</td><td>Full name</td></tr>
+                    <tr><td><code>email</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, email</td><td>Unique login email</td></tr>
+                    <tr><td><code>phone</code></td><td><span class="ttype">string</span></td><td><span class="opt">optional</span>, min 7</td><td>Contact phone</td></tr>
+                    <tr><td><code>password</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 6</td><td>Account password</td></tr>
+                </table>
+                <h4>Response <span class="status status-201">201</span></h4>
+                <pre>{ "data": {
+  "accessToken": "eyJ...",
+  "refreshToken": "b64url...",
+  "user": { "id": "...", "name": "...", "email": "...", "role": "CUSTOMER" }
+} }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-409">409</span> <code>"Email already registered"</code></li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/auth/login</code>
-                <p>Login with email/password. Returns accessToken + refreshToken.</p>
-                <p><span class="role-badge public">Public</span></p>
+                <p>Authenticate with email + password. Returns a fresh token pair.</p>
+                <p class="auth-line"><span class="role-badge public">Public</span></p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>email</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, email</td><td>Login email</td></tr>
+                    <tr><td><code>password</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 1</td><td>Account password</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": {
+  "accessToken": "eyJ...",
+  "refreshToken": "b64url...",
+  "user": { "id": "...", "name": "...", "email": "...", "role": "..." }
+} }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> <code>"Invalid email or password"</code> (unknown email or wrong password — same message to avoid enumeration)</li>
+                    <li><span class="status status-403">403</span> <code>"Account banned"</code></li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/auth/refresh</code>
-                <p>Rotate refresh token. Old token revoked, new pair issued.</p>
-                <p><span class="role-badge public">Public</span></p>
+                <p>Rotate the refresh token. The supplied token is revoked and a brand-new pair is issued (single-use rotation).</p>
+                <p class="auth-line"><span class="role-badge public">Public</span> — the refresh token itself authenticates</p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>refreshToken</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 1</td><td>Current valid refresh token</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": {
+  "accessToken": "eyJ...",
+  "refreshToken": "b64url...",   // new — old one now revoked
+  "user": { "id": "...", "name": "...", "email": "...", "role": "..." }
+} }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> <code>"Invalid or expired refresh token"</code> (not found / revoked / expired)</li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/auth/logout</code>
-                <p>Revoke refresh token (single) or all sessions (allDevices: true).</p>
-                <p><span class="role-badge customer">Requires Auth</span></p>
+                <p>Revoke a single refresh token, or every session for the user. Idempotent — no error if the token is already gone.</p>
+                <p class="auth-line"><span class="role-badge public">Public</span> for single-token; <strong>Bearer required</strong> when <code>allDevices: true</code></p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>refreshToken</code></td><td><span class="ttype">string</span></td><td><span class="opt">optional</span>, min 1</td><td>Token to revoke</td></tr>
+                    <tr><td><code>allDevices</code></td><td><span class="ttype">boolean</span></td><td><span class="opt">optional</span></td><td>If true, revoke all of the user's refresh tokens (needs Bearer)</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "loggedOut": true } }
+// or, with allDevices:
+{ "data": { "loggedOut": "all-devices" } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> <code>"Unauthorized"</code> (allDevices set without a valid Bearer token)</li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/auth/me</code>
-                <p>Get current user profile (id, name, email, role).</p>
-                <p><span class="role-badge customer">Requires Auth</span></p>
+                <p>Return the authenticated user's profile.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — any role</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": {
+  "id": "...", "name": "...", "email": "...",
+  "phone": "0911..." | null, "role": "...", "createdAt": "ISO"
+} }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> <code>"Unauthorized"</code></li>
+                    <li><span class="status status-404">404</span> <code>"User not found"</code></li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method patch">PATCH</span><code>/api/auth/me</code>
-                <p>Update profile (name, email, phone). Validates email uniqueness.</p>
-                <p><span class="role-badge customer">Requires Auth</span></p>
+                <p>Update the authenticated user's own profile. Email uniqueness is enforced.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — any role</p>
+                <h4>Request Body (all optional)</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>name</code></td><td><span class="ttype">string</span></td><td><span class="opt">optional</span>, min 2</td><td>New name</td></tr>
+                    <tr><td><code>phone</code></td><td><span class="ttype">string</span></td><td><span class="opt">optional</span>, min 7, max 20</td><td>New phone</td></tr>
+                    <tr><td><code>email</code></td><td><span class="ttype">string</span></td><td><span class="opt">optional</span>, email</td><td>New email (must be unused)</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "id","name","email","phone","role","createdAt" } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized</li>
+                    <li><span class="status status-409">409</span> <code>"Email already in use"</code></li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method delete">DELETE</span><code>/api/auth/me</code>
-                <p>Delete account. Fails if account has tickets.</p>
-                <p><span class="role-badge customer">Requires Auth</span></p>
+                <p>Delete the authenticated user's own account. Revokes all refresh tokens first; reset tokens cascade-delete.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — any role</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "message": "Account deleted" } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized</li>
+                    <li><span class="status status-409">409</span> <code>"Cannot delete account with existing tickets. Contact support."</code></li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <span class="method post">POST</span><code>/api/auth/change-password</code>
+                <p>Change password while logged in. Revokes all refresh tokens (logs out other sessions).</p>
+                <p class="auth-line"><strong>Bearer required</strong> — any role</p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>currentPassword</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 1</td><td>Existing password</td></tr>
+                    <tr><td><code>newPassword</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 6</td><td>New password</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "message": "Password changed. Other sessions were logged out." } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> <code>"Unauthorized"</code> / <code>"Current password is incorrect"</code></li>
+                    <li><span class="status status-404">404</span> <code>"User not found"</code></li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/auth/forgot-password</code>
-                <p>Request password reset. Sends email with token.</p>
-                <p><span class="role-badge public">Public</span> (dev also returns devResetToken)</p>
+                <p>Start a password reset. Always returns the same generic message (no email enumeration). If the user exists, an in-app notification + reset email are sent.</p>
+                <p class="auth-line"><span class="role-badge public">Public</span></p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>email</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, email</td><td>Account email</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "message": "If that email exists, a reset link has been sent." } }
+// non-production only, if the email send fails:
+{ "data": { "message": "...", "devResetToken": "raw-token" } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-400">422</span> validation failed (no 404 by design)</li>
+                </ul>
             </div>
 
-            <h3>Tickets (9 endpoints)</h3>
+            <div class="endpoint">
+                <span class="method post">POST</span><code>/api/auth/reset-password</code>
+                <p>Complete a password reset using the token from the email. Single-use; revokes all refresh tokens.</p>
+                <p class="auth-line"><span class="role-badge public">Public</span> — the reset token authenticates</p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>token</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 1</td><td>Raw reset token from email</td></tr>
+                    <tr><td><code>newPassword</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 6</td><td>New password</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "message": "Password has been reset. Please log in again." } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-400">400</span> <code>"Invalid or expired reset token"</code> (not found / used / expired)</li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
+            </div>
+
+            <h3>🎫 Tickets (9 endpoints)</h3>
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/tickets</code>
-                <p>Create support ticket. Auto-generates ETC-YYYYMMDD-NNNN number.</p>
-                <p><span class="role-badge customer">CUSTOMER</span></p>
+                <p>Create a support ticket owned by the caller. Auto-generates a <code>ticketNumber</code> and an in-app notification.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — typically <span class="role-badge customer">CUSTOMER</span></p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>subject</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, 3–120</td><td>Short summary</td></tr>
+                    <tr><td><code>serviceNumber</code></td><td><span class="ttype">string</span></td><td><span class="opt">optional</span>, 3–40</td><td>Customer's Ethio Telecom line/account no.</td></tr>
+                    <tr><td><code>category</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 2</td><td>e.g. NO_CONNECTION, SLOW_SPEED</td></tr>
+                    <tr><td><code>description</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 5</td><td>Full problem description</td></tr>
+                    <tr><td><code>priority</code></td><td><span class="ttype">enum</span></td><td><span class="opt">optional</span>, default <code>MEDIUM</code></td><td>LOW · MEDIUM · HIGH · URGENT</td></tr>
+                </table>
+                <h4>Response <span class="status status-201">201</span></h4>
+                <pre>{ "data": {
+  "id": "...", "ticketNumber": "ETC-20260728-4821",
+  "subject": "...", "serviceNumber": "..." | null,
+  "category": "...", "description": "...",
+  "status": "OPEN", "priority": "MEDIUM",
+  "createdAt": "ISO", "updatedAt": "ISO", "resolvedAt": null,
+  "customerId": "...", "technicianId": null
+} }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized</li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/tickets</code>
-                <p>List tickets. Scoped: customer=own, technician=assigned, admin=all.</p>
-                <p><span class="role-badge customer">All (scoped)</span></p>
+                <p>List tickets, scoped by role: <span class="role-badge customer">CUSTOMER</span> own · <span class="role-badge tech">TECHNICIAN</span> assigned · <span class="role-badge admin">ADMIN</span> all. Ordered newest first.</p>
+                <p class="auth-line"><strong>Bearer required</strong></p>
+                <h4>Query Params</h4>
+                <table>
+                    <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+                    <tr><td><code>status</code></td><td><span class="ttype">string</span></td><td>Filter by TicketStatus. <em>Must be a valid enum value</em> — an invalid value causes a DB error.</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": [ {
+  ...ticket fields,
+  "customer": { "id","name","email" },
+  "technician": { "id","name" } | null
+} ] }</pre>
+                <h4>Errors</h4>
+                <ul><li><span class="status status-401">401</span> unauthorized</li></ul>
             </div>
 
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/tickets/{id}</code>
-                <p>Get ticket detail + queue info (position, ahead, ETA).</p>
-                <p><span class="role-badge customer">Scoped (owner only)</span></p>
+                <p>Full ticket detail including customer, technician, review, and live queue info.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — customer must own the ticket; staff unrestricted</p>
+                <h4>Path Params</h4>
+                <table><tr><th>Param</th><th>Description</th></tr><tr><td><code>id</code></td><td>Ticket id (cuid)</td></tr></table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": {
+  ...ticket fields,
+  "customer": { "id","name","email" },
+  "technician": { "id","name" } | null,
+  "review": { ...Review } | null,
+  "queue": { "position": 3, "ahead": 2, "estimatedWaitMinutes": 90 }
+} }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized</li>
+                    <li><span class="status status-404">404</span> <code>"Ticket not found"</code></li>
+                    <li><span class="status status-403">403</span> <code>"Forbidden"</code> (customer viewing another's ticket)</li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/tickets/{id}/queue</code>
-                <p>Real-time queue position. Position = ahead × 45 min (configurable).</p>
-                <p><span class="role-badge customer">Scoped</span></p>
+                <p>Live queue position + ETA for one ticket. Estimate = people ahead × <code>AVG_HANDLE_MINUTES</code> (default 45).</p>
+                <p class="auth-line"><strong>Bearer required</strong> — customer must own the ticket</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": {
+  "ticketNumber": "ETC-...", "status": "OPEN",
+  "position": 3, "ahead": 2, "estimatedWaitMinutes": 90
+} }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized</li>
+                    <li><span class="status status-404">404</span> <code>"Ticket not found"</code></li>
+                    <li><span class="status status-403">403</span> <code>"Forbidden"</code></li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method patch">PATCH</span><code>/api/tickets/{id}</code>
-                <p>Update ticket (status, priority). Customer can cancel own.</p>
-                <p><span class="role-badge customer">Scoped</span></p>
+                <p>Update a ticket. Staff (ADMIN/TECHNICIAN) may change status/priority/description; a customer owner may only cancel or edit the description of a still-<code>OPEN</code> ticket. Setting <code>RESOLVED</code> stamps <code>resolvedAt</code>; a status change notifies the customer.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — staff or ticket owner</p>
+                <h4>Request Body (all optional)</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>status</code></td><td><span class="ttype">enum</span></td><td>TicketStatus</td><td>New status (customer: only <code>CANCELLED</code>)</td></tr>
+                    <tr><td><code>priority</code></td><td><span class="ttype">enum</span></td><td>Priority</td><td>Applied only for staff callers</td></tr>
+                    <tr><td><code>description</code></td><td><span class="ttype">string</span></td><td>min 5</td><td>Edited description</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { ...updated ticket fields } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized</li>
+                    <li><span class="status status-404">404</span> <code>"Ticket not found"</code></li>
+                    <li><span class="status status-403">403</span> <code>"Forbidden"</code> / <code>"Customers can only cancel a ticket"</code></li>
+                    <li><span class="status status-409">409</span> <code>"Ticket can no longer be edited by the customer"</code> (non-OPEN)</li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/tickets/{id}/assign</code>
-                <p>Assign technician to ticket. Notifies both parties.</p>
-                <p><span class="role-badge admin">ADMIN</span></p>
+                <p>Assign a technician. If the ticket was <code>OPEN</code>, status becomes <code>ASSIGNED</code>. Notifies both customer and technician.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> only</p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>technicianId</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 1</td><td>Id of a user whose role is TECHNICIAN</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { ...updated ticket fields } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code> (non-admin)</li>
+                    <li><span class="status status-404">404</span> <code>"Ticket not found"</code> / <code>"Technician not found"</code> (missing or not a technician)</li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/tickets/{id}/resolve</code>
-                <p>Mark ticket fixed (RESOLVED). Tech can only resolve own assigned.</p>
-                <p><span class="role-badge tech">TECH/ADMIN (tech=own)</span></p>
+                <p>Mark a ticket <code>RESOLVED</code> (stamps <code>resolvedAt</code>) and notify the customer to review. No request body.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> (any ticket) or <span class="role-badge tech">TECHNICIAN</span> (only tickets assigned to them)</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { ...updated ticket fields } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized</li>
+                    <li><span class="status status-403">403</span> <code>"Forbidden"</code> (wrong role) / <code>"This ticket is not assigned to you"</code></li>
+                    <li><span class="status status-404">404</span> <code>"Ticket not found"</code></li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/tickets/{id}/reopen</code>
-                <p>Reopen resolved ticket (RESOLVED → IN_PROGRESS).</p>
-                <p><span class="role-badge tech">TECH/ADMIN (tech=own)</span></p>
+                <p>Reopen a <code>RESOLVED</code> ticket → <code>IN_PROGRESS</code> (clears <code>resolvedAt</code>). Emails the customer, creates a notification, and writes an audit log. No request body.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> or <span class="role-badge tech">TECHNICIAN</span> (only their assigned tickets)</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "ticket": {
+  "id","ticketNumber","status":"IN_PROGRESS","priority","subject",
+  "message": "Ticket reopened. Customer notified."
+} } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code></li>
+                    <li><span class="status status-404">404</span> <code>"Ticket not found"</code></li>
+                    <li><span class="status status-400">400</span> <code>"Can only reopen resolved tickets"</code></li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/tickets/{id}/review</code>
-                <p>Customer reviews resolved ticket (1-5 rating). Single-use per ticket.</p>
-                <p><span class="role-badge customer">CUSTOMER (owner)</span></p>
+                <p>Leave a one-time service review. Allowed only when the ticket is <code>RESOLVED</code>/<code>CLOSED</code> and not yet reviewed. On success the ticket moves to <code>CLOSED</code>.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — must be the ticket owner (<span class="role-badge customer">CUSTOMER</span>)</p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>rating</code></td><td><span class="ttype">number</span></td><td><span class="req">required</span>, integer 1–5</td><td>Star rating</td></tr>
+                    <tr><td><code>comment</code></td><td><span class="ttype">string</span></td><td><span class="opt">optional</span>, max 1000</td><td>Free-text feedback</td></tr>
+                </table>
+                <h4>Response <span class="status status-201">201</span></h4>
+                <pre>{ "data": { "id", "rating", "comment": "..." | null, "createdAt", "ticketId", "userId" } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code> (not owner)</li>
+                    <li><span class="status status-404">404</span> <code>"Ticket not found"</code></li>
+                    <li><span class="status status-409">409</span> <code>"You can only review a resolved ticket"</code> / <code>"Ticket already reviewed"</code></li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
             </div>
 
-            <h3>Appointments (3 endpoints)</h3>
+            <h3>📅 Appointments (3 endpoints)</h3>
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/appointments</code>
-                <p>Reserve branch appointment slot. Validates future time, prevents double-booking.</p>
-                <p><span class="role-badge customer">All</span></p>
+                <p>Reserve a branch visit for the caller. Rejects past slots and prevents double-booking the same branch + time. Sends a notification.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — any authenticated user</p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>branch</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 2</td><td>Branch name</td></tr>
+                    <tr><td><code>slotTime</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, ISO 8601</td><td>Desired slot (must be future)</td></tr>
+                    <tr><td><code>notes</code></td><td><span class="ttype">string</span></td><td><span class="opt">optional</span>, max 500</td><td>Extra details</td></tr>
+                </table>
+                <h4>Response <span class="status status-201">201</span></h4>
+                <pre>{ "data": {
+  "id","branch","slotTime","status":"RESERVED",
+  "notes": "..." | null,"createdAt","userId"
+} }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized</li>
+                    <li><span class="status status-400">422</span> <code>"Slot time must be in the future"</code> / validation failed</li>
+                    <li><span class="status status-409">409</span> <code>"That slot is already reserved"</code></li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/appointments</code>
-                <p>List appointments. Scoped by role.</p>
-                <p><span class="role-badge customer">All (scoped)</span></p>
+                <p>List appointments (ordered by slot time). <span class="role-badge customer">CUSTOMER</span> sees own; staff see all.</p>
+                <p class="auth-line"><strong>Bearer required</strong></p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": [ { ...appointment fields, "user": { "id","name","email" } } ] }</pre>
+                <h4>Errors</h4>
+                <ul><li><span class="status status-401">401</span> unauthorized</li></ul>
             </div>
 
             <div class="endpoint">
                 <span class="method patch">PATCH</span><code>/api/appointments/{id}</code>
-                <p>Update appointment (status: RESERVED/COMPLETED/CANCELLED).</p>
-                <p><span class="role-badge customer">Scoped (owner or staff)</span></p>
+                <p>Change appointment status. A customer owner may only set <code>CANCELLED</code>; staff may set any status (e.g. <code>COMPLETED</code>).</p>
+                <p class="auth-line"><strong>Bearer required</strong> — owner or staff</p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>status</code></td><td><span class="ttype">enum</span></td><td><span class="req">required</span></td><td>RESERVED · COMPLETED · CANCELLED</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { ...updated appointment fields } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized</li>
+                    <li><span class="status status-404">404</span> <code>"Appointment not found"</code></li>
+                    <li><span class="status status-403">403</span> <code>"Forbidden"</code> / <code>"Customers can only cancel appointments"</code></li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
             </div>
 
-            <h3>Admin User Management (6 endpoints)</h3>
+            <h3>⚙️ Admin — User Management (8 endpoints)</h3>
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/admin/users</code>
-                <p>Invite technician/admin. Sends email with temporary password.</p>
-                <p><span class="role-badge admin">ADMIN</span></p>
+                <p>Invite a staff member. Generates a temporary password, creates the user, and emails an invitation. <em>CUSTOMER role is not allowed here.</em></p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> only</p>
+                <h4>Request Body</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>email</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, email</td><td>New staff email</td></tr>
+                    <tr><td><code>name</code></td><td><span class="ttype">string</span></td><td><span class="req">required</span>, min 1</td><td>Full name</td></tr>
+                    <tr><td><code>role</code></td><td><span class="ttype">enum</span></td><td><span class="req">required</span></td><td><code>ADMIN</code> or <code>TECHNICIAN</code></td></tr>
+                </table>
+                <h4>Response <span class="status status-201">201</span></h4>
+                <pre>{ "data": {
+  "user": { "id","email","name","role" },
+  "message": "Invitation sent to &lt;email&gt;. Temporary password included in email."
+} }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code></li>
+                    <li><span class="status status-409">409</span> <code>"Email already in use"</code></li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/admin/users</code>
-                <p>List all users (no password exposed).</p>
-                <p><span class="role-badge admin">ADMIN</span></p>
+                <p>List all users. Passwords are never returned.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> only</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "users": [ { "id","email","name","role","createdAt" } ] } }</pre>
+                <h4>Errors</h4>
+                <ul><li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code></li></ul>
             </div>
 
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/admin/users/{id}</code>
-                <p>View user details.</p>
-                <p><span class="role-badge admin">ADMIN</span></p>
+                <p>View one user's full details.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> only</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "user": {
+  "id","email","name","phone": "..." | null,"role","createdAt","updatedAt"
+} } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code></li>
+                    <li><span class="status status-404">404</span> <code>"User not found"</code></li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method patch">PATCH</span><code>/api/admin/users/{id}</code>
-                <p>Update user (name, email, role, phone).</p>
-                <p><span class="role-badge admin">ADMIN</span></p>
+                <p>Update a user's profile/role. Writes an audit log with a field-level change diff (name/email/phone/role), IP, and user-agent.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> only</p>
+                <h4>Request Body (all optional)</h4>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Rules</th><th>Description</th></tr>
+                    <tr><td><code>name</code></td><td><span class="ttype">string</span></td><td>min 1</td><td>New name</td></tr>
+                    <tr><td><code>email</code></td><td><span class="ttype">string</span></td><td>email</td><td>New email (must be unused)</td></tr>
+                    <tr><td><code>role</code></td><td><span class="ttype">enum</span></td><td>Role</td><td>CUSTOMER · TECHNICIAN · ADMIN</td></tr>
+                    <tr><td><code>phone</code></td><td><span class="ttype">string</span></td><td>—</td><td>New phone</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "user": { "id","email","name","phone","role" } } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code></li>
+                    <li><span class="status status-404">404</span> <code>"User not found"</code> · <span class="status status-409">409</span> <code>"Email already in use"</code></li>
+                    <li><span class="status status-400">422</span> validation failed</li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method delete">DELETE</span><code>/api/admin/users/{id}</code>
-                <p>Hard delete user (cascading cleanup). Cannot delete yourself.</p>
-                <p><span class="role-badge admin">ADMIN</span></p>
+                <p>Hard-delete a user (cascades their tokens etc.) and write an audit log. Cannot delete your own account.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> only</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "message": "User &lt;email&gt; deleted" } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code></li>
+                    <li><span class="status status-400">400</span> <code>"Cannot delete yourself"</code></li>
+                    <li><span class="status status-404">404</span> <code>"User not found"</code></li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/admin/users/{id}/ban</code>
-                <p>Ban user. Prevents login, revokes all sessions.</p>
-                <p><span class="role-badge admin">ADMIN</span></p>
+                <p>Ban a user: sets <code>banned=true</code>, revokes all their refresh tokens, writes an audit log, and emails a ban notice. Banned users cannot log in. No request body. Cannot ban yourself.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> only</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "user": { "id","email","banned":true,"bannedAt":"ISO" } } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code></li>
+                    <li><span class="status status-400">400</span> <code>"Cannot ban yourself"</code> · <span class="status status-404">404</span> <code>"User not found"</code></li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/admin/users/{id}/unban</code>
-                <p>Unban user.</p>
-                <p><span class="role-badge admin">ADMIN</span></p>
+                <p>Reverse a ban: sets <code>banned=false</code>, clears <code>bannedAt</code>, writes an audit log. No request body.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> only</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { "user": { "id","email","banned":false,"bannedAt":null } } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code></li>
+                    <li><span class="status status-404">404</span> <code>"User not found"</code> · <span class="status status-400">400</span> <code>"User is not banned"</code></li>
+                </ul>
             </div>
 
             <div class="endpoint">
                 <span class="method post">POST</span><code>/api/admin/users/{id}/reset-password</code>
-                <p>Force password reset. Sends email with temp password. Revokes all other sessions.</p>
-                <p><span class="role-badge admin">ADMIN</span></p>
+                <p>Force a password reset: generates a temporary password, revokes all the user's refresh tokens, writes an audit log, and emails the temp password. No request body.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> only</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": {
+  "message": "Password reset for &lt;email&gt;. Temporary password sent via email.",
+  "user": { "id","email" }
+} }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code></li>
+                    <li><span class="status status-404">404</span> <code>"User not found"</code></li>
+                </ul>
             </div>
 
-            <h3>Admin Audit & Queue (3 endpoints)</h3>
+            <h3>📊 Admin — Audit &amp; Queue · Staff (3 endpoints)</h3>
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/admin/audit</code>
-                <p>View audit logs (paginated). Filter by userId, action. Shows who did what, when, from where.</p>
-                <p><span class="role-badge admin">ADMIN</span></p>
+                <p>Paginated audit trail of admin actions — who did what, when, from which IP/agent.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> only</p>
+                <h4>Query Params</h4>
+                <table>
+                    <tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                    <tr><td><code>page</code></td><td><span class="ttype">number</span></td><td>1</td><td>Page number</td></tr>
+                    <tr><td><code>limit</code></td><td><span class="ttype">number</span></td><td>50</td><td>Rows per page</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": {
+  "logs": [ {
+    "id","action","resourceType","resourceId","description",
+    "changes": "json-string" | null,"performedBy",
+    "ipAddress": "..." | null,"userAgent": "..." | null,
+    "status","errorMessage": "..." | null,"createdAt",
+    "performedByUser": { "id","email","name" }
+  } ],
+  "pagination": { "page","limit","total","totalPages" }
+} }</pre>
+                <h4>Errors</h4>
+                <ul><li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code></li></ul>
             </div>
 
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/admin/queue</code>
-                <p>View full ordered queue. Ordered: priority → FIFO. Includes queue positions.</p>
-                <p><span class="role-badge admin">ADMIN</span></p>
+                <p>The full work queue (tickets in OPEN/ASSIGNED/IN_PROGRESS), ordered priority → FIFO, with 1-based positions and per-item ETA.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> only</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": {
+  "total": 12,
+  "queue": [ {
+    "position": 1, "estimatedWaitMinutes": 0,
+    ...ticket fields,
+    "customer": { "id","name","email" },
+    "technician": { "id","name" } | null
+  } ]
+} }</pre>
+                <h4>Errors</h4>
+                <ul><li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code></li></ul>
             </div>
 
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/technicians</code>
-                <p>List technicians with active ticket count (ASSIGNED + IN_PROGRESS).</p>
-                <p><span class="role-badge admin">ADMIN</span></p>
+                <p>List technicians with their live workload (open assignments), ordered by name.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — <span class="role-badge admin">ADMIN</span> only</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": [ { "id","name","email","activeTickets": 3 } ] }
+// activeTickets = assigned tickets in {ASSIGNED, IN_PROGRESS}</pre>
+                <h4>Errors</h4>
+                <ul><li><span class="status status-401">401</span> unauthorized · <span class="status status-403">403</span> <code>"Forbidden"</code></li></ul>
             </div>
 
-            <h3>Notifications (2 endpoints)</h3>
+            <h3>🔔 Notifications (2 endpoints)</h3>
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/notifications</code>
-                <p>List notifications. Supports ?unread=1 filter.</p>
-                <p><span class="role-badge customer">All</span></p>
+                <p>List the caller's own notifications (newest first, max 100).</p>
+                <p class="auth-line"><strong>Bearer required</strong> — any role</p>
+                <h4>Query Params</h4>
+                <table>
+                    <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+                    <tr><td><code>unread</code></td><td><span class="ttype">string</span></td><td>If exactly <code>"1"</code>, returns only unread notifications</td></tr>
+                </table>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": [ {
+  "id","message","read": false,"createdAt","userId","ticketId": "..." | null
+} ] }</pre>
+                <h4>Errors</h4>
+                <ul><li><span class="status status-401">401</span> unauthorized</li></ul>
             </div>
 
             <div class="endpoint">
                 <span class="method patch">PATCH</span><code>/api/notifications/{id}</code>
-                <p>Mark notification as read.</p>
-                <p><span class="role-badge customer">All</span></p>
+                <p>Mark one of the caller's notifications as read. Body is ignored.</p>
+                <p class="auth-line"><strong>Bearer required</strong> — must own the notification</p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "data": { ...notification with "read": true } }</pre>
+                <h4>Errors</h4>
+                <ul>
+                    <li><span class="status status-401">401</span> unauthorized</li>
+                    <li><span class="status status-404">404</span> <code>"Notification not found"</code> (missing or not owned — same message)</li>
+                </ul>
             </div>
 
-            <h3>Utilities (2 endpoints)</h3>
+            <h3>🩺 Utilities (2 endpoints)</h3>
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/health</code>
-                <p>Health check. Always returns 200 {status: "ok", service: "ethio-telecom-rms-api"}.</p>
-                <p><span class="role-badge public">Public</span></p>
+                <p>Liveness check. <strong>Not</strong> wrapped in the <code>data</code> envelope.</p>
+                <p class="auth-line"><span class="role-badge public">Public</span></p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>{ "status": "ok", "service": "ethio-telecom-rms-api" }</pre>
             </div>
 
             <div class="endpoint">
                 <span class="method get">GET</span><code>/api/swagger.json</code>
-                <p>OpenAPI 3.0.0 specification. Machine-readable API documentation.</p>
-                <p><span class="role-badge public">Public</span></p>
+                <p>Machine-readable OpenAPI 3.0 specification (raw file, not enveloped).</p>
+                <p class="auth-line"><span class="role-badge public">Public</span></p>
+                <h4>Response <span class="status status-200">200</span></h4>
+                <pre>application/json — the full OpenAPI document</pre>
             </div>
         </section>
 
