@@ -11,16 +11,9 @@ export const POST = handler(async (req, { params }) => {
     return fail("Cannot ban yourself", 400);
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, email: true, banned: true },
-  });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
     return fail("User not found", 404);
-  }
-
-  if (user.banned) {
-    return fail("User already banned", 400);
   }
 
   // Ban user and revoke all sessions
