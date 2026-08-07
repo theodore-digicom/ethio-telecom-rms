@@ -109,7 +109,10 @@ export const GET = handler(async (req) => {
       id: true,
       email: true,
       name: true,
+      phone: true,
       role: true,
+      banned: true,
+      bannedAt: true,
       createdAt: true,
     },
   });
